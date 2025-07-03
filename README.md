@@ -55,11 +55,15 @@ git clone https://github.com/yourusername/cat-fact-tracker.git
 cd cat-fact-tracker
 ```
 
+After cloning the repository, follow these steps to run the Cat Fact Tracker application:
+
 ### 2. Backend Setup
+
+Open a terminal and navigate to the backend directory:
 ```bash
 cd backend
 
-# Create virtual environment
+# Create virtual environment (recommended)
 python -m venv venv
 
 # Activate virtual environment
@@ -71,45 +75,83 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the server
-python main.py
+# First, populate the database with initial cat facts
+python import_cat_facts.py
+
+# Then start the FastAPI server using Uvicorn for auto-reload during development
+uvicorn main:app --reload
 ```
 
-The backend will be available at `http://localhost:8000`
+The backend API will be available at `http://localhost:8000`
 
 ### 3. Frontend Setup
+
+Open a new terminal and navigate to the frontend directory:
 ```bash
 cd frontend
 
 # Install dependencies
 npm install
 
-# Run the development server
+# Start the Next.js development server
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:3000`
+The frontend application will be available at `http://localhost:3000`
+
+## Quick Start
+
+### Step 1: Clone and Setup Backend
+```bash
+git clone https://github.com/yourusername/cat-fact-tracker.git
+cd cat-fact-tracker/backend
+
+# Create and activate virtual environment
+python -m venv venv
+venv\Scripts\activate  # Windows
+source venv/bin/activate  # macOS/Linux
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize database with sample data
+python import_cat_facts.py
+
+# Start the backend server
+uvicorn main:app --reload
+```
+
+### Step 2: Setup Frontend (New Terminal)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### Step 3: Access the Application
+- **Backend**: http://localhost:8000
+- **Frontend**: http://localhost:3000
+- **API Documentation**: http://localhost:8000/docs
 
 ## Usage
 
-1. **Start the Backend**: Run the FastAPI server on port 8000
-2. **Start the Frontend**: Run the Next.js development server on port 3000
-3. **Add Cat Facts**: Use the form to add your own cat facts
-4. **Get Random Facts**: Click the "Get Random Cat Fact" button to fetch facts from external API
-5. **Manage Facts**: Mark facts as favorites, filter by categories, or delete unwanted facts
+1. **View Cat Facts**: The dashboard displays all stored cat facts from your database
+2. **Add New Facts**: Use the form to submit your own cat facts to the database
+3. **Get Random Facts**: Click "Get Random Cat Fact" to fetch new facts from the external API
+4. **Delete Facts**: Remove unwanted facts from your collection
+5. **Database Management**: Facts are automatically saved to SQLite database for persistence
+
+**Note**: The application requires both backend (port 8000) and frontend (port 3000) servers to be running simultaneously.
 
 ## API Documentation
 
 Once the backend is running, visit `http://localhost:8000/docs` for interactive API documentation.
 
 ### Main Endpoints
-- `GET /api/facts` - Get all cat facts
-- `POST /api/facts` - Create a new cat fact
-- `GET /api/facts/{id}` - Get a specific cat fact
-- `PUT /api/facts/{id}` - Update a cat fact
-- `DELETE /api/facts/{id}` - Delete a cat fact
-- `POST /api/facts/{id}/favorite` - Toggle favorite status
-- `GET /api/facts/random` - Get a random cat fact from external API
+- `GET /catfacts` - Get all cat facts from database
+- `POST /catfacts` - Create a new cat fact (via form data)
+- `DELETE /catfacts/{id}` - Delete a cat fact by ID
+- `GET /catfacts/random` - Get a random cat fact from external API
 
 ## Project Structure
 
