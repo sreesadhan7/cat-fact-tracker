@@ -31,7 +31,7 @@ def initialize_database():
             CREATE TABLE IF NOT EXISTS cat_facts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 fact TEXT UNIQUE,
-                created_at DATE DEFAULT (DATE('now'))
+                created_at DATETIME DEFAULT (DATETIME('now'))
             )
         ''')
         
@@ -107,3 +107,38 @@ def get_all_facts() -> List[Tuple[int, str, str]]:
     except sqlite3.Error as e:
         print(f"Database error while retrieving facts: {e}")
         return []
+
+
+def delete_fact_from_database(fact_id: int) -> bool:
+    """
+    Deletes a cat fact from the database by ID
+    
+    Args:
+        fact_id (int): The ID of the fact to delete
+    
+    Returns:
+        bool: True if fact was deleted, False if fact was not found
+    """
+    try:
+        conn = sqlite3.connect(DATABASE_FILE)
+        cursor = conn.cursor()
+        
+        # Delete the fact with the given ID
+        cursor.execute("DELETE FROM cat_facts WHERE id = ?", (fact_id,))
+        
+        # Check if any row was actually deleted
+        rows_affected = cursor.rowcount
+        
+        conn.commit()
+        conn.close()
+        
+        if rows_affected > 0:
+            print(f"DELETED: Cat fact with ID {fact_id} deleted from database")
+            return True
+        else:
+            print(f"NOT FOUND: No cat fact with ID {fact_id} found in database")
+            return False
+            
+    except sqlite3.Error as e:
+        print(f"Database error while deleting fact: {e}")
+        return False

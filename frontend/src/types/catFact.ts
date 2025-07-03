@@ -2,7 +2,7 @@ export interface CatFact {
   id: number;
   fact: string;
   source: string;
-  timestamp: string;
+  created_at: string;
   favorite: boolean;
 }
 

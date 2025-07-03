@@ -11,7 +11,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import uvicorn
 import httpx
-from database import initialize_database, get_all_facts, save_fact_to_database
+from database import initialize_database, get_all_facts, save_fact_to_database, delete_fact_from_database
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -170,6 +170,39 @@ async def create_cat_fact_form(fact: str = Form(...)):
             "message": f"Database error occurred while saving the fact: {str(e)}",
             "error": "DATABASE_ERROR"
         }
+
+
+@app.delete("/catfacts/{fact_id}")
+async def delete_cat_fact(fact_id: int):
+    """
+    Delete a cat fact from the database by ID
+    
+    Args:
+        fact_id (int): The ID of the fact to delete
+    
+    Returns:
+        dict: Success message or error message if fact not found
+    """
+    try:
+        # Delete fact from database
+        success = delete_fact_from_database(fact_id)
+        
+        if success:
+            return {
+                "success": True,
+                "message": f"Cat fact with ID {fact_id} has been deleted successfully"
+            }
+        else:
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Cat fact with ID {fact_id} not found"
+            )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Database error occurred while deleting the fact: {str(e)}"
+        )
 
 
 # Run the application
