@@ -1,116 +1,145 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import CatFactCard from '@/components/CatFactCard';
 import AddFactForm from '@/components/AddFactForm';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import EmptyState from '@/components/EmptyState';
+import { useToast } from '@/components/ToastProvider';
 import { CatFact } from '@/types/catFact';
 
 export default function Home() {
   const [catFacts, setCatFacts] = useState<CatFact[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'favorites' | 'user' | 'api'>('all');
   const [isGettingRandomFact, setIsGettingRandomFact] = useState(false);
+  const { showSuccess, showError, showWarning } = useToast();
 
-  useEffect(() => {
-    fetchFacts();
-  }, []);
-
-  const fetchFacts = async () => {
+  const fetchFacts = useCallback(async () => {
     try {
-      setError(null);
-      const response = await fetch('http://localhost:8000/api/facts');
+      const response = await fetch('http://localhost:8000/catfacts');
       if (response.ok) {
         const facts = await response.json();
-        setCatFacts(facts);
+        // Transform the API response to match our CatFact interface
+        const transformedFacts = facts.map((fact: { id: number; fact: string; created_at: string }) => ({
+          id: fact.id,
+          fact: fact.fact,
+          source: 'api', // Backend doesn't track source, so default to 'api'
+          timestamp: fact.created_at,
+          favorite: false // Backend doesn't track favorites, so default to false
+        }));
+        setCatFacts(transformedFacts);
       } else {
         throw new Error('Failed to fetch facts');
       }
     } catch (error) {
       console.error('Error fetching facts:', error);
-      setError('Unable to connect to the backend. Make sure the API server is running on port 8000.');
+      showError('Unable to connect to the backend. Make sure the API server is running on port 8000.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    fetchFacts();
+  }, [fetchFacts]);
 
   const handleAddFact = async (fact: string) => {
     try {
-      const response = await fetch('http://localhost:8000/api/facts', {
+      const formData = new FormData();
+      formData.append('fact', fact);
+      
+      const response = await fetch('http://localhost:8000/catfacts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fact,
-          source: 'user',
-        }),
+        body: formData,
       });
 
       if (response.ok) {
-        const newFact = await response.json();
-        setCatFacts([newFact, ...catFacts]);
+        const result = await response.json();
+        if (result.success && result.data) {
+          // Transform the response to match our CatFact interface
+          const newFact = {
+            id: result.data.id,
+            fact: result.data.fact,
+            source: 'user', // Mark user-added facts as 'user'
+            timestamp: result.data.created_at,
+            favorite: false
+          };
+          setCatFacts([newFact, ...catFacts]);
+          showSuccess('Cat fact added successfully!');
+        } else {
+          // Handle duplicate facts gracefully
+          if (result.error === 'DUPLICATE_FACT') {
+            showWarning('This cat fact already exists in the database. Try adding a different fact!');
+          } else {
+            showError(result.message || 'Failed to add fact');
+          }
+          return; // Don't throw error for duplicates
+        }
       } else {
         throw new Error('Failed to add fact');
       }
     } catch (error) {
       console.error('Error adding fact:', error);
-      setError('Failed to add the cat fact. Please try again.');
+      showError('Failed to add the cat fact. Please try again.');
     }
   };
 
   const handleDeleteFact = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/facts/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setCatFacts(catFacts.filter(fact => fact.id !== id));
-      } else {
-        throw new Error('Failed to delete fact');
-      }
-    } catch (error) {
-      console.error('Error deleting fact:', error);
-      setError('Failed to delete the cat fact. Please try again.');
-    }
+    // Since backend doesn't support delete, just remove from local state
+    setCatFacts(catFacts.filter(fact => fact.id !== id));
   };
 
   const handleToggleFavorite = async (id: number) => {
-    try {
-      const response = await fetch(`http://localhost:8000/api/facts/${id}/favorite`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        const updatedFact = await response.json();
-        setCatFacts(catFacts.map(fact => 
-          fact.id === id ? updatedFact.fact : fact
-        ));
-      } else {
-        throw new Error('Failed to toggle favorite');
-      }
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-      setError('Failed to update favorite status. Please try again.');
-    }
+    // Since backend doesn't support favorites, just toggle in local state
+    setCatFacts(catFacts.map(fact => 
+      fact.id === id ? { ...fact, favorite: !fact.favorite } : fact
+    ));
   };
 
   const handleGetRandomFact = async () => {
     setIsGettingRandomFact(true);
     try {
-      const response = await fetch('http://localhost:8000/api/facts/random');
+      const response = await fetch('http://localhost:8000/catfacts/random');
       if (response.ok) {
-        const randomFact = await response.json();
-        await handleAddFact(randomFact.fact);
+        const randomFactData = await response.json();
+        
+        // Try to add the fact, but handle duplicates gracefully
+        const formData = new FormData();
+        formData.append('fact', randomFactData.fact);
+        
+        const addResponse = await fetch('http://localhost:8000/catfacts', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (addResponse.ok) {
+          const result = await addResponse.json();
+          if (result.success && result.data) {
+            // Transform the response to match our CatFact interface
+            const newFact = {
+              id: result.data.id,
+              fact: result.data.fact,
+              source: 'api', // Mark random facts as 'api'
+              timestamp: result.data.created_at,
+              favorite: false
+            };
+            setCatFacts([newFact, ...catFacts]);
+            showSuccess('Random cat fact added successfully!');
+          } else if (result.error === 'DUPLICATE_FACT') {
+            showWarning('That random cat fact already exists! Try getting another one.');
+          } else {
+            showError(result.message || 'Failed to add random fact');
+          }
+        } else {
+          throw new Error('Failed to add random fact');
+        }
       } else {
         throw new Error('Failed to get random fact');
       }
     } catch (error) {
       console.error('Error getting random fact:', error);
-      setError('Failed to get a random cat fact. Please try again.');
+      showError('Failed to get a random cat fact. Please try again.');
     } finally {
       setIsGettingRandomFact(false);
     }
@@ -207,24 +236,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="text-red-700 dark:text-red-300">{error}</p>
-                <button
-                  onClick={() => setError(null)}
-                  className="ml-auto text-red-500 hover:text-red-700"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Filter Tabs */}
           {catFacts.length > 0 && (
