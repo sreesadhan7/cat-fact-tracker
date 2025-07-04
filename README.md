@@ -13,11 +13,10 @@ A modern, full-stack web application for discovering, collecting, and managing f
 - **Beautiful UI**: Modern gradient design with glassmorphism effects
 - **Dark Mode**: Full dark mode support
 - **Responsive Design**: Works perfectly on all devices
-- **Interactive Dashboard**: Real-time stats and filtering
+- **Interactive Dashboard**: Real-time stats
 - **CRUD Operations**: Add, edit, delete, and favorite cat facts
 - **Random Facts**: Get random cat facts from external API
-- **Filter System**: Filter by favorites, user-added, or API facts
-- **Loading States**: Smooth loading animations and error handling
+<!-- - **Loading States**: Smooth loading animations and error handling -->
 
 ### Backend (Python + FastAPI)
 - **RESTful API**: Complete CRUD operations for cat facts
@@ -64,13 +63,13 @@ Open a terminal and navigate to the backend directory:
 cd backend
 
 # Create virtual environment (recommended)
-python -m venv venv
+# python -m venv venv
 
 # Activate virtual environment
 # Windows:
-venv\Scripts\activate
+# venv\Scripts\activate
 # macOS/Linux:
-source venv/bin/activate
+# source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -107,9 +106,9 @@ git clone https://github.com/yourusername/cat-fact-tracker.git
 cd cat-fact-tracker/backend
 
 # Create and activate virtual environment
-python -m venv venv
-venv\Scripts\activate  # Windows
-source venv/bin/activate  # macOS/Linux
+# python -m venv venv
+# venv\Scripts\activate  # Windows
+# source venv/bin/activate  # macOS/Linux
 
 # Install dependencies
 pip install -r requirements.txt
@@ -159,26 +158,43 @@ Once the backend is running, visit `http://localhost:8000/docs` for interactive 
 cat-fact-tracker/
 ├── backend/
 │   ├── main.py              # FastAPI application
-│   ├── requirements.txt     # Python dependencies
-│   ├── README.md           # Backend documentation
-│   └── .gitignore          # Python gitignore
+│   ├── database.py          # Database operations
+│   ├── import_cat_facts.py  # Database initialization script
+│   └── README.md           # Backend documentation
 ├── frontend/
 │   ├── src/
 │   │   ├── app/
 │   │   │   ├── layout.tsx   # Root layout
 │   │   │   ├── page.tsx     # Main page
-│   │   │   └── globals.css  # Global styles
+│   │   │   ├── globals.css  # Global styles
+│   │   │   └── favicon.ico  # App icon
 │   │   ├── components/      # React components
-│   │   │   ├── CatFactCard.tsx
 │   │   │   ├── AddFactForm.tsx
+│   │   │   ├── CatFactCard.tsx
+│   │   │   ├── ChartIcon.tsx
+│   │   │   ├── Charts.tsx
 │   │   │   ├── LoadingSpinner.tsx
-│   │   │   └── EmptyState.tsx
+│   │   │   ├── theme-provider.tsx
+│   │   │   ├── theme-toggle.tsx
+│   │   │   └── ui/          # UI components
+│   │   │       ├── button.tsx
+│   │   │       ├── card.tsx
+│   │   │       └── sonner.tsx
+│   │   ├── lib/
+│   │   │   └── utils.ts     # Utility functions
 │   │   └── types/
 │   │       └── catFact.ts   # TypeScript types
+│   ├── public/              # Static assets
 │   ├── package.json        # Node dependencies
-│   └── tailwind.config.js  # Tailwind configuration
-├── README.md               # Project documentation
-└── .gitignore             # Git ignore rules
+│   ├── next.config.ts      # Next.js configuration
+│   ├── tsconfig.json       # TypeScript configuration
+│   ├── components.json     # shadcn/ui components config
+│   ├── postcss.config.mjs  # PostCSS configuration
+│   ├── eslint.config.mjs   # ESLint configuration
+│   └── README.md           # Frontend documentation
+├── requirements.txt        # Python dependencies
+├── README.md              # Project documentation
+└── .gitignore            # Git ignore rules
 ```
 
 ## Future Enhancements
@@ -186,10 +202,9 @@ cat-fact-tracker/
 - [ ] User authentication and accounts
 - [ ] Database integration (PostgreSQL/MongoDB)
 - [ ] Cat fact sharing functionality
-- [ ] Advanced search and filtering
+- [ ] Search and filtering
 - [ ] Fact categories and tags
 - [ ] Export facts to different formats
-- [ ] Mobile app version
 - [ ] Social features and comments
 
 ## Acknowledgments
